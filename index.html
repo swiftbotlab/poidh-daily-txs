@@ -8,247 +8,430 @@
 <style>
 :root {
   color-scheme: light;
-  --bg: #f6f5f2; --surface-1: #fcfcfb; --border: #e2e0da; --grid: #ebe9e4;
+  --bg: #f6f5f2; --surface-1: #fcfcfb; --border: #e2e0da; --grid: #ebe9e4; --hover: rgba(120,120,110,.13);
   --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #77756f;
-  --series-ethereum: #2a78d6; --series-arbitrum: #eb6834; --series-base: #1baf7a;
-  --accent: #2a78d6; --chip: #efede8;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+  --accent: #2a78d6; --chip: #efede8; --avg: #0b0b0b;
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
-    --bg: #121211; --surface-1: #1a1a19; --border: #33322f; --grid: #2a2a28;
+    --bg: #121211; --surface-1: #1a1a19; --border: #33322f; --grid: #2a2a28; --hover: rgba(200,200,190,.12);
     --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #9a998f;
-    --series-ethereum: #3987e5; --series-arbitrum: #d95926; --series-base: #199e70;
-    --accent: #3987e5; --chip: #262624;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+    --accent: #5c9cec; --chip: #262624; --avg: #f0efec;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #121211; --surface-1: #1a1a19; --border: #33322f; --grid: #2a2a28;
+  --bg: #121211; --surface-1: #1a1a19; --border: #33322f; --grid: #2a2a28; --hover: rgba(200,200,190,.12);
   --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #9a998f;
-  --series-ethereum: #3987e5; --series-arbitrum: #d95926; --series-base: #199e70;
-  --accent: #3987e5; --chip: #262624;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  --accent: #5c9cec; --chip: #262624; --avg: #f0efec;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text-primary);
   font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-main { max-width: 1040px; margin: 0 auto; padding: 28px 16px 48px; }
+main { max-width: 1080px; margin: 0 auto; padding: 26px 16px 48px; }
+header { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; }
 h1 { font-size: 26px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
-.sub { color: var(--text-secondary); margin: 0 0 22px; }
-.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
-.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.sub { color: var(--text-secondary); margin: 0 0 20px; max-width: 760px; }
+.theme { border: 1px solid var(--border); background: var(--surface-1); color: var(--text-secondary); font: inherit; font-size: 13px;
+  border-radius: 8px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; min-width: 0; }
 .tile .k { color: var(--text-secondary); font-size: 13px; }
 .tile .v { font-size: 26px; font-weight: 650; font-variant-numeric: tabular-nums; margin-top: 2px; }
 .tile .n { color: var(--text-muted); font-size: 12.5px; }
+.bar100 { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 12px 0 6px; gap: 2px; }
 .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 10px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-bottom: 8px; }
 .seg { display: inline-flex; background: var(--chip); border-radius: 8px; padding: 3px; }
 .seg button { border: 0; background: transparent; color: var(--text-secondary); font: inherit; font-size: 13.5px;
   padding: 5px 11px; border-radius: 6px; cursor: pointer; }
-.seg button[aria-pressed="true"] { background: var(--surface-1); color: var(--text-primary); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
-.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-left: auto; font-size: 13.5px; color: var(--text-secondary); }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.seg button[aria-pressed="true"] { background: var(--surface-1); color: var(--text-primary); box-shadow: 0 1px 2px rgba(0,0,0,.14); }
+.dates { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--text-secondary); }
+.dates input { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 6px; padding: 3px 6px; }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; color: var(--text-secondary); cursor: pointer; }
+.legend { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 6px; }
+.legend button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: var(--surface-1);
+  color: var(--text-primary); font: inherit; font-size: 13px; padding: 3px 10px 3px 8px; border-radius: 999px; cursor: pointer; }
+.legend button[aria-pressed="false"] { color: var(--text-muted); }
+.legend button[aria-pressed="false"] .sw { background: transparent !important; outline: 1.5px solid var(--text-muted); outline-offset: -1.5px; }
+.legend .hint { font-size: 12.5px; color: var(--text-muted); align-self: center; }
+.sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex: none; }
 .chart { position: relative; }
 svg { display: block; width: 100%; height: auto; }
-.tip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
-  border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.14); min-width: 150px; display: none; }
+.tip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); z-index: 2;
+  border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.16); min-width: 170px; display: none; }
 .tip b { display: block; margin-bottom: 3px; }
 .tip .row { display: flex; justify-content: space-between; gap: 14px; font-variant-numeric: tabular-nums; }
 .tip .row span:first-child { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); }
 .tip .tot { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px; font-weight: 600; }
+.tip .cta { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+#detail { margin-top: 14px; display: none; }
+#detail h3 { font-size: 15.5px; margin: 0 0 8px; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+#detail h3 button { border: 0; background: none; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; }
+.txlist { max-height: 360px; overflow: auto; border-top: 1px solid var(--border); }
+.tx { display: grid; grid-template-columns: 70px 92px 150px minmax(0, 1fr) 110px; gap: 10px; padding: 6px 2px;
+  border-bottom: 1px solid var(--border); font-size: 13.5px; align-items: center; }
+.tx .t { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.tx .c { display: inline-flex; align-items: center; gap: 6px; }
+.tx .a { color: var(--text-secondary); }
+.tx .b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx .h { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; text-align: right; }
 h2 { font-size: 17px; margin: 28px 0 10px; }
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
 th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--border); }
 th:first-child, td:first-child { text-align: left; white-space: nowrap; }
-th { color: var(--text-secondary); font-weight: 600; }
-.tablewrap { max-height: 420px; overflow: auto; }
+th { color: var(--text-secondary); font-weight: 600; position: sticky; top: 0; background: var(--surface-1); }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--hover); }
+.tablewrap { max-height: 420px; overflow: auto; padding-top: 0; }
 .notes { color: var(--text-secondary); font-size: 14px; }
 .notes code { font-size: 12.5px; background: var(--chip); padding: 1px 5px; border-radius: 4px; word-break: break-all; }
 a { color: var(--accent); }
 footer { margin-top: 30px; color: var(--text-muted); font-size: 13px; }
-@media (max-width: 720px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .legend { margin-left: 0; } }
+@media (max-width: 720px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tx { grid-template-columns: 52px 80px minmax(0, 1fr) 90px; }
+  .tx .a { display: none; }
+}
 </style>
 </head>
 <body>
 <main>
-  <h1>poidh transactions per day</h1>
-  <p class="sub">All transactions on the poidh v3 contracts on Ethereum, Arbitrum and Base, from January 1, 2026 to today (UTC). The data refreshes automatically every day. <span id="updated"></span></p>
+  <header>
+    <div>
+      <h1>poidh transactions per day</h1>
+      <p class="sub">Every transaction on the poidh v3 contracts on Ethereum, Arbitrum and Base since January 1, 2026, by day (UTC). It refreshes itself every day. <span id="updated"></span></p>
+    </div>
+    <button class="theme" id="theme" title="Switch light or dark">Theme: auto</button>
+  </header>
 
   <div class="tiles" id="tiles"></div>
 
   <div class="card">
     <div class="controls">
       <div class="seg" role="group" aria-label="Range">
-        <button data-range="30">30 days</button><button data-range="90">90 days</button><button data-range="all" aria-pressed="true">Since Jan 1</button>
+        <button data-range="7">7 d</button><button data-range="30">30 d</button><button data-range="90">90 d</button><button data-range="all">Since Jan 1</button>
+      </div>
+      <span class="dates"><input type="date" id="from" aria-label="From date"> to <input type="date" id="to" aria-label="To date"></span>
+      <div class="seg" role="group" aria-label="View">
+        <button data-view="chain">By chain</button><button data-view="action">By action</button><button data-view="cum">Cumulative</button>
       </div>
       <div class="seg" role="group" aria-label="Grouping">
-        <button data-group="day" aria-pressed="true">Daily</button><button data-group="week">Weekly</button>
+        <button data-group="day">Daily</button><button data-group="week">Weekly</button>
       </div>
-      <div class="legend" id="legend"></div>
+      <label class="check"><input type="checkbox" id="avg"> 7-day average</label>
     </div>
+    <div class="legend" id="legend"></div>
     <div class="chart" id="chart"><div class="tip" id="tip"></div></div>
+    <div id="detail"></div>
   </div>
 
   <h2>Every day, as a table</h2>
-  <p class="notes">Newest first. <a href="data/daily.csv" download>Download CSV</a> · <a href="data/daily.json">JSON</a></p>
+  <p class="notes">Newest first; click a row to list that day's transactions. <a href="data/daily.csv" download>Download CSV</a> · <a href="data/daily.json">daily JSON</a> · <a href="data/txs.json">every transaction (JSON)</a></p>
   <div class="card tablewrap"><table id="table"></table></div>
 
   <h2>How this is counted</h2>
   <div class="notes">
-    <p>Contracts: Ethereum <code>0xE731dFadBFf20542E10D09D26Fc71445C70d4232</code>, Arbitrum and Base <code>0x5555Fa783936C260f77385b4E153B9725feF1719</code>. The v3 contracts went live on Arbitrum and Base on January 20, 2026 and on Ethereum on May 14, 2026, so earlier days show zero.</p>
-    <p>Source: poidh's public indexer (<a href="https://indexer.poidh.xyz/swagger">indexer.poidh.xyz</a>), which records each contract action with its transaction hash: bounty created or joined, claim created, submitted for vote, voted, vote resolved, claim accepted, bounty canceled. A day's number is the count of distinct transaction hashes that day (UTC). Transactions sent through smart wallets count too, so the Ethereum number can be higher than a block explorer's list of direct calls. Withdrawals are not indexed per bounty and are not included.</p>
-    <p>A GitHub Action rebuilds the data every day at 00:20 UTC. Code and data: <a href="https://github.com/swiftbotlab/poidh-daily-txs">github.com/swiftbotlab/poidh-daily-txs</a>.</p>
+    <p>Contracts: Ethereum <code>0xE731dFadBFf20542E10D09D26Fc71445C70d4232</code>, Arbitrum and Base <code>0x5555Fa783936C260f77385b4E153B9725feF1719</code>. v3 went live on Arbitrum and Base on January 20, 2026 and on Ethereum on May 14, 2026, so earlier days are zero.</p>
+    <p>Source: poidh's public indexer (<a href="https://indexer.poidh.xyz/swagger">indexer.poidh.xyz</a>), which records each contract action with its transaction hash. A day's number is the count of distinct transaction hashes that day (UTC). "By action" groups them as claims (claim created), bounties (created or canceled), funding (ETH added to or taken out of open bounties), voting (sent to vote, votes, results) and accepted claims. Transactions sent through smart wallets count too, so Ethereum can show more than a block explorer's list of direct calls. Plain withdrawals of winnings are not indexed per bounty and are not included.</p>
+    <p>A GitHub Action rebuilds the data every day at 00:20 UTC and redeploys this page. Code and data: <a href="https://github.com/swiftbotlab/poidh-daily-txs">github.com/swiftbotlab/poidh-daily-txs</a>.</p>
   </div>
   <footer>Made by Swift Bot Labs for the poidh "txs per day dashboard" bounty.</footer>
 </main>
 <script>
 (async function () {
-  const SERIES = [
-    { key: "base", label: "Base" },
-    { key: "arbitrum", label: "Arbitrum" },
-    { key: "ethereum", label: "Ethereum" },
+  const CHAINS = [
+    { key: "base", label: "Base", col: "var(--s3)", slug: "base", ex: "https://basescan.org/tx/" },
+    { key: "arbitrum", label: "Arbitrum", col: "var(--s2)", slug: "arbitrum", ex: "https://arbiscan.io/tx/" },
+    { key: "ethereum", label: "Ethereum", col: "var(--s1)", slug: "mainnet", ex: "https://etherscan.io/tx/" },
   ];
-  const fmt = n => n.toLocaleString("en-US");
-  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  const color = k => `var(--series-${k})`;
-  let doc;
-  try {
-    const r = await fetch("data/daily.json?v=" + Date.now());
-    doc = await r.json();
-  } catch (e) {
-    document.getElementById("chart").textContent = "Could not load data/daily.json.";
-    return;
+  const ACTIONS = [
+    { key: "claims", label: "Claims", col: "var(--s1)" },
+    { key: "bounties", label: "Bounties", col: "var(--s2)" },
+    { key: "funding", label: "Funding", col: "var(--s3)" },
+    { key: "voting", label: "Voting", col: "var(--s4)" },
+    { key: "accepted", label: "Accepted", col: "var(--s5)" },
+  ];
+  const fmt = n => Math.round(n).toLocaleString("en-US");
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pretty = iso => new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+  // theme toggle: auto -> light -> dark
+  const themeBtn = document.getElementById("theme");
+  function applyTheme(t) {
+    if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
+    themeBtn.textContent = "Theme: " + t;
   }
+  let theme = store.get("theme") || "auto"; applyTheme(theme);
+  themeBtn.onclick = () => { theme = { auto: "light", light: "dark", dark: "auto" }[theme]; store.set("theme", theme); applyTheme(theme); };
+
+  let doc;
+  try { doc = await (await fetch("data/daily.json?v=" + Date.now())).json(); }
+  catch (e) { document.getElementById("chart").textContent = "Could not load data/daily.json."; return; }
   const days = doc.days;
+  const first = days[0].date, last = days[days.length - 1].date;
   document.getElementById("updated").textContent = "Last updated " + doc.generatedAt.replace("T", " ").replace("Z", " UTC") + ".";
 
-  // tiles
-  const total = days.reduce((s, d) => s + d.total, 0);
-  const last7 = days.slice(-7).reduce((s, d) => s + d.total, 0);
-  const prev7 = days.slice(-14, -7).reduce((s, d) => s + d.total, 0);
-  const best = days.reduce((a, d) => d.total > a.total ? d : a, days[0]);
-  const active = days.filter(d => d.total > 0).length;
-  const pretty = iso => new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
-  const shares = SERIES.map(s => ({ ...s, n: days.reduce((a, d) => a + d[s.key], 0) }));
-  document.getElementById("tiles").innerHTML = [
-    ["Transactions since Jan 1", fmt(total), `${active} active days`],
-    ["Last 7 days", fmt(last7), prev7 ? `${last7 >= prev7 ? "+" : ""}${Math.round((last7 - prev7) / prev7 * 100)}% vs the 7 days before` : ""],
-    ["Busiest day", fmt(best.total), pretty(best.date)],
-    ["By chain", shares.map(s => `${s.label} ${Math.round(s.n / total * 100)}%`).join(" · "), shares.map(s => fmt(s.n)).join(" / ")],
-  ].map(([k, v, n], i) => `<div class="tile"><div class="k">${k}</div><div class="v"${i === 3 ? ' style="font-size:15px;font-weight:600;margin-top:8px"' : ""}>${v}</div><div class="n">${n}</div></div>`).join("");
-
-  // legend
-  document.getElementById("legend").innerHTML = SERIES.map(s => `<span><i class="sw" style="background:${color(s.key)}"></i>${s.label}</span>`).join("");
-
-  // table (newest first)
-  document.getElementById("table").innerHTML = "<thead><tr><th>Date (UTC)</th>" + SERIES.slice().reverse().map(s => `<th>${s.label}</th>`).join("") + "<th>Total</th></tr></thead><tbody>" +
-    days.slice().reverse().map(d => `<tr><td>${d.date}</td>${SERIES.slice().reverse().map(s => `<td>${fmt(d[s.key])}</td>`).join("")}<td><b>${fmt(d.total)}</b></td></tr>`).join("") + "</tbody>";
-
-  let range = "all", group = "day";
-  const chart = document.getElementById("chart"), tip = document.getElementById("tip");
-  if (chart.clientWidth < 600) {   // phones: weekly bars stay readable
-    group = "week";
-    document.querySelectorAll("[data-group]").forEach(x => x.setAttribute("aria-pressed", x.dataset.group === "week"));
+  // ---- state (also mirrored in the URL hash so a view can be shared) ----
+  const st = { range: "all", from: first, to: last, view: "chain", group: "day", avg: false, off: new Set(), sel: null };
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (["7", "30", "90", "all"].includes(h.get("range"))) st.range = h.get("range");
+  if (/^\d{4}-\d\d-\d\d$/.test(h.get("from") || "")) { st.range = "custom"; st.from = h.get("from"); st.to = /^\d{4}-\d\d-\d\d$/.test(h.get("to") || "") ? h.get("to") : last; }
+  if (["chain", "action", "cum"].includes(h.get("view"))) st.view = h.get("view");
+  if (["day", "week"].includes(h.get("group"))) st.group = h.get("group"); else if (document.getElementById("chart").clientWidth < 600) st.group = "week";
+  if (h.get("avg") === "1") st.avg = true;
+  (h.get("off") || "").split(",").filter(k => /^[a-z]+$/.test(k)).forEach(k => st.off.add(k));
+  function sync() {
+    const p = new URLSearchParams();
+    if (st.range === "custom") { p.set("from", st.from); p.set("to", st.to); } else if (st.range !== "all") p.set("range", st.range);
+    if (st.view !== "chain") p.set("view", st.view);
+    if (st.group !== "day") p.set("group", st.group);
+    if (st.avg) p.set("avg", "1");
+    if (st.off.size) p.set("off", [...st.off].join(","));
+    history.replaceState(null, "", p.toString() ? "#" + p : location.pathname);
   }
 
-  function bucket() {
-    let rows = range === "all" ? days : days.slice(-Number(range));
-    if (group === "day") return rows.map(d => ({ ...d, label: pretty(d.date) }));
+  const fromEl = document.getElementById("from"), toEl = document.getElementById("to"), avgEl = document.getElementById("avg");
+  fromEl.min = toEl.min = first; fromEl.max = toEl.max = last;
+  const series = () => st.view === "action" ? ACTIONS : CHAINS;
+  const val = (r, s) => st.view === "action" ? r.by[s.key] : r[s.key];
+  const on = s => !st.off.has(s.key);
+  const sumOn = r => series().filter(on).reduce((a, s) => a + val(r, s), 0);
+
+  function inRange() {
+    if (st.range === "custom") {
+      const r = days.filter(d => d.date >= st.from && d.date <= st.to);
+      return r.length ? r : days;
+    }
+    return st.range === "all" ? days : days.slice(-Number(st.range));
+  }
+
+  function weekKey(iso) {
+    const t = new Date(iso + "T00:00:00Z"), wd = (t.getUTCDay() + 6) % 7;   // Monday start
+    return new Date(t - wd * 864e5).toISOString().slice(0, 10);
+  }
+
+  function bucket(rows) {
+    if (st.group === "day") return rows.map(d => ({ ...d, key: d.date, end: d.date, label: pretty(d.date) }));
     const out = [];
     for (const d of rows) {
-      const t = new Date(d.date + "T00:00:00Z"); const wd = (t.getUTCDay() + 6) % 7; // Monday start
-      const mon = new Date(t - wd * 864e5).toISOString().slice(0, 10);
+      const k = weekKey(d.date);
       let b = out[out.length - 1];
-      if (!b || b.date !== mon) { b = { date: mon, base: 0, arbitrum: 0, ethereum: 0, total: 0 }; out.push(b); }
-      for (const s of SERIES) b[s.key] += d[s.key];
-      b.total += d.total;
+      if (!b || b.key !== k) {
+        b = { key: k, date: d.date, end: d.date, total: 0, by: {} };
+        CHAINS.forEach(c => b[c.key] = 0); ACTIONS.forEach(a => b.by[a.key] = 0); out.push(b);
+      }
+      b.end = d.date; b.total += d.total;
+      CHAINS.forEach(c => b[c.key] += d[c.key]); ACTIONS.forEach(a => b.by[a.key] += d.by[a.key]);
     }
-    return out.map(b => ({ ...b, label: "Week of " + pretty(b.date) }));
+    return out.map(b => ({ ...b, label: pretty(b.date) + (b.end !== b.date ? " – " + pretty(b.end) : "") }));
+  }
+
+  // ---- tiles ----
+  function tiles(rows) {
+    const tot = rows.reduce((a, r) => a + sumOn(r), 0);
+    const best = rows.reduce((a, r) => sumOn(r) > sumOn(a) ? r : a, rows[0]);
+    const active = rows.filter(r => sumOn(r) > 0).length;
+    const last7 = days.slice(-7).reduce((a, r) => a + sumOn(r), 0), prev7 = days.slice(-14, -7).reduce((a, r) => a + sumOn(r), 0);
+    const per = CHAINS.map(c => ({ ...c, n: rows.reduce((a, r) => a + r[c.key], 0) }));
+    const pt = per.reduce((a, c) => a + c.n, 0) || 1;
+    const what = series().filter(on).map(s => s.label).join(", ");
+    document.getElementById("tiles").innerHTML = `
+      <div class="tile"><div class="k">Transactions in range</div><div class="v">${fmt(tot)}</div><div class="n">${esc(what || "nothing selected")} · ${active} active days</div></div>
+      <div class="tile"><div class="k">Average per active day</div><div class="v">${active ? (tot / active).toFixed(1) : "0"}</div><div class="n">Last 7 days: ${fmt(last7)}${prev7 ? ` (${last7 >= prev7 ? "+" : ""}${Math.round((last7 - prev7) / prev7 * 100)}% vs prior 7)` : ""}</div></div>
+      <div class="tile"><div class="k">Busiest day in range</div><div class="v">${fmt(sumOn(best))}</div><div class="n">${pretty(best.date)}</div></div>
+      <div class="tile"><div class="k">Share by chain in range</div>
+        <div class="bar100">${per.filter(c => c.n).map(c => `<span style="flex:${c.n};background:${c.col}" title="${c.label} ${fmt(c.n)}"></span>`).join("")}</div>
+        <div class="n">${per.map(c => `${c.label} ${Math.round(c.n / pt * 100)}%`).join(" · ")}</div></div>`;
+  }
+
+  // ---- legend (click to show / hide a series) ----
+  function legend() {
+    const L = document.getElementById("legend");
+    const hint = st.view === "cum" ? "Running total of the chains you keep switched on" : "Click to show or hide · click a bar for its transactions";
+    L.innerHTML = (st.view === "cum" ? CHAINS : series()).map(s => `<button data-k="${s.key}" aria-pressed="${on(s)}"><i class="sw" style="background:${s.col}"></i>${s.label}</button>`).join("") + `<span class="hint">${hint}</span>`;
+    L.querySelectorAll("button").forEach(b => b.onclick = () => {
+      st.off.has(b.dataset.k) ? st.off.delete(b.dataset.k) : st.off.add(b.dataset.k); render();
+    });
   }
 
   function niceMax(v) {
     if (v <= 5) return 5;
-    const p = Math.pow(10, Math.floor(Math.log10(v))); const m = v / p;
+    const p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p;
     for (const k of [1, 1.2, 1.6, 2, 2.4, 3, 4, 5, 6, 8, 10]) if (m <= k) return k * p;
   }
 
-  function draw() {
-    const rows = bucket();
+  const chart = document.getElementById("chart"), tip = document.getElementById("tip");
+  let rowsDrawn = [];
+
+  function draw(rows) {
+    rowsDrawn = rows;
     const W = Math.max(320, chart.clientWidth), H = W < 600 ? 260 : 340;
-    const m = { l: 44, r: 8, t: 10, b: 28 };
-    const iw = W - m.l - m.r, ih = H - m.t - m.b;
-    const ymax = niceMax(Math.max(1, ...rows.map(r => r.total)));
-    const step = iw / rows.length;
-    const gap = step >= 6 ? 2 : step >= 3 ? 1 : 0;
-    const bw = Math.max(1, step - gap);
-    const y = v => m.t + ih - v / ymax * ih;
-    const ticks = [0, .25, .5, .75, 1].map(f => f * ymax);
-    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Stacked bar chart of poidh transactions per ${group} by chain">`;
-    for (const t of ticks) {
-      s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)" stroke-width="1"/>`;
-      s += `<text x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11.5" fill="var(--text-muted)">${fmt(Math.round(t))}</text>`;
-    }
-    rows.forEach((r, i) => {
-      const x = m.l + i * step + gap / 2;
-      let acc = 0;
-      const visible = SERIES.filter(se => r[se.key] > 0);
-      visible.forEach((se, j) => {
-        const v = r[se.key];
-        const top = y(acc + v), h = y(acc) - top;
-        const sep = j > 0 && h > 3 ? 1 : 0;           // thin surface gap between stacked segments
-        const last = j === visible.length - 1;
-        const rad = last && bw >= 6 ? Math.min(3, h / 2) : 0;
-        if (rad) {
-          s += `<path d="M${x},${top + h - sep}V${top + rad}Q${x},${top} ${x + rad},${top}H${x + bw - rad}Q${x + bw},${top} ${x + bw},${top + rad}V${top + h - sep}Z" fill="${color(se.key)}"/>`;
-        } else {
-          s += `<rect x="${x}" y="${top}" width="${bw}" height="${Math.max(0, h - sep)}" fill="${color(se.key)}"/>`;
-        }
-        acc += v;
+    const m = { l: 46, r: 10, t: 12, b: 28 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const shown = (st.view === "cum" ? CHAINS : series()).filter(on);
+    const v = (r, s) => st.view === "action" ? r.by[s.key] : r[s.key];
+    let run = 0;
+    const totals = rows.map(r => shown.reduce((a, s) => a + v(r, s), 0));
+    const cumVals = totals.map(t => (run += t));
+    const avgVals = totals.map((t, i) => { const w = totals.slice(Math.max(0, i - 6), i + 1); return w.reduce((a, b) => a + b, 0) / w.length; });
+    const ymax = niceMax(Math.max(1, ...(st.view === "cum" ? cumVals : totals)));
+    const step = iw / rows.length, gap = step >= 6 ? 2 : step >= 3 ? 1 : 0, bw = Math.max(1, step - gap);
+    const y = val => m.t + ih - val / ymax * ih;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="poidh transactions per ${st.group}">`;
+    [0, .25, .5, .75, 1].forEach(f => {
+      const t = f * ymax;
+      s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/>`;
+      s += `<text x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11.5" fill="var(--text-muted)">${fmt(t)}</text>`;
+    });
+    if (st.view === "cum") {
+      const pts = rows.map((r, i) => `${(m.l + (i + .5) * step).toFixed(1)},${y(cumVals[i]).toFixed(1)}`);
+      s += `<path d="M${(m.l + step / 2).toFixed(1)},${y(0)} L${pts.join(" L")} L${(m.l + (rows.length - .5) * step).toFixed(1)},${y(0)} Z" fill="var(--s1)" opacity=".12"/>`;
+      s += `<polyline points="${pts.join(" ")}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round"/>`;
+      s += `<line id="xh" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="var(--text-muted)" stroke-dasharray="3 3" opacity="0"/><circle id="xd" r="4.5" fill="var(--s1)" stroke="var(--surface-1)" stroke-width="2" opacity="0"/>`;
+    } else {
+      rows.forEach((r, i) => {
+        const x = m.l + i * step + gap / 2;
+        if (st.sel === r.key) s += `<rect x="${m.l + i * step}" y="${m.t}" width="${step}" height="${ih}" fill="var(--hover)"/>`;
+        let acc = 0;
+        const vis = shown.filter(se => v(r, se) > 0);
+        vis.forEach((se, j) => {
+          const n = v(r, se), top = y(acc + n), hgt = y(acc) - top;
+          const sep = j > 0 && hgt > 3 ? 1 : 0;
+          const rad = j === vis.length - 1 && bw >= 6 ? Math.min(3, hgt / 2) : 0;
+          s += rad
+            ? `<path d="M${x},${top + hgt - sep}V${top + rad}Q${x},${top} ${x + rad},${top}H${x + bw - rad}Q${x + bw},${top} ${x + bw},${top + rad}V${top + hgt - sep}Z" fill="${se.col}"/>`
+            : `<rect x="${x}" y="${top}" width="${bw}" height="${Math.max(0, hgt - sep)}" fill="${se.col}"/>`;
+          acc += n;
+        });
       });
-      s += `<rect class="hit" data-i="${i}" x="${m.l + i * step}" y="${m.t}" width="${Math.max(step, 1)}" height="${ih}" fill="transparent"/>`;
-    });
-    // x labels: first of each month (daily) or every ~4th week
-    const seen = new Set();
+      if (st.avg) {
+        const pts = rows.map((r, i) => `${(m.l + (i + .5) * step).toFixed(1)},${y(avgVals[i]).toFixed(1)}`).join(" ");
+        s += `<polyline points="${pts}" fill="none" stroke="var(--surface-1)" stroke-width="4" stroke-linejoin="round"/>`;
+        s += `<polyline points="${pts}" fill="none" stroke="var(--avg)" stroke-width="2" stroke-linejoin="round"/>`;
+      }
+    }
+    rows.forEach((r, i) => s += `<rect class="hit" data-i="${i}" x="${m.l + i * step}" y="${m.t}" width="${Math.max(step, 1)}" height="${ih}" fill="transparent" style="cursor:${st.view === "cum" ? "crosshair" : "pointer"}"/>`);
+    // x labels: day numbers when zoomed in, otherwise the first bar of each month
+    const few = rows.length <= 16, seen = new Set();
     rows.forEach((r, i) => {
-      const mon = r.date.slice(0, 7);
-      if (seen.has(mon)) return; seen.add(mon);
-      if (group === "day" && rows.length > 40 && r.date.slice(8) !== "01" && i !== 0) return;
       const x = m.l + i * step;
-      if (x > W - 40) return;
-      const lab = new Date(r.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }) + (rows.length <= 40 ? " " + Number(r.date.slice(8)) : "");
-      s += `<text x="${x}" y="${H - 8}" font-size="11.5" fill="var(--text-muted)">${lab}</text>`;
+      let lab = null;
+      if (few) { if (i % Math.ceil(rows.length / 8) === 0) lab = new Date(r.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }); }
+      else {
+        const mon = r.date.slice(0, 7), dd = Number(r.date.slice(8, 10));
+        // label each month where it starts; label the first bar only if its month still has room (no "Jul" crammed next to "Aug")
+        const ok = st.group === "day" ? (dd === 1 || (i === 0 && dd <= 20)) : (i === 0 ? dd <= 14 : true);
+        if (!seen.has(mon) && ok) { seen.add(mon); lab = new Date(r.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }); }
+      }
+      if (lab && x < W - 34) s += `<text x="${few ? x + step / 2 : x}" y="${H - 8}" font-size="11.5" text-anchor="${few ? "middle" : "start"}" fill="var(--text-muted)">${lab}</text>`;
     });
-    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(0)}" y2="${y(0)}" stroke="var(--text-muted)" stroke-width="1"/>`;
-    s += "</svg>";
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(0)}" y2="${y(0)}" stroke="var(--text-muted)"/></svg>`;
     chart.querySelector("svg")?.remove();
     chart.insertAdjacentHTML("afterbegin", s);
     const svg = chart.querySelector("svg");
     let hl = null;
     svg.addEventListener("mousemove", ev => {
-      const t = ev.target.closest(".hit"); if (!t) { tip.style.display = "none"; return; }
-      const r = rows[+t.dataset.i];
-      if (hl) hl.setAttribute("fill", "transparent");
-      t.setAttribute("fill", "rgba(127,127,127,.12)"); hl = t;
-      tip.innerHTML = `<b>${r.label}</b>` + SERIES.slice().reverse().map(se => `<div class="row"><span><i class="sw" style="background:${color(se.key)}"></i>${se.label}</span><span>${fmt(r[se.key])}</span></div>`).join("") + `<div class="row tot"><span>Total</span><span>${fmt(r.total)}</span></div>`;
+      const t = ev.target.closest(".hit"); if (!t) return;
+      const i = +t.dataset.i, r = rows[i];
+      if (st.view === "cum") {
+        const cx = m.l + (i + .5) * step, xh = svg.querySelector("#xh"), xd = svg.querySelector("#xd");
+        xh.setAttribute("x1", cx); xh.setAttribute("x2", cx); xh.setAttribute("opacity", 1);
+        xd.setAttribute("cx", cx); xd.setAttribute("cy", y(cumVals[i])); xd.setAttribute("opacity", 1);
+        tip.innerHTML = `<b>${r.label}</b><div class="row"><span>Running total</span><span>${fmt(cumVals[i])}</span></div><div class="row"><span>That ${st.group}</span><span>${fmt(totals[i])}</span></div><div class="cta">Click for the transactions</div>`;
+      } else {
+        if (hl) hl.setAttribute("fill", "transparent");
+        t.setAttribute("fill", "var(--hover)"); hl = t;
+        tip.innerHTML = `<b>${r.label}</b>` + series().slice().reverse().map(se => `<div class="row"><span><i class="sw" style="background:${on(se) ? se.col : "transparent"};outline:${on(se) ? "none" : "1px solid var(--text-muted)"}"></i>${se.label}</span><span>${fmt(val(r, se))}</span></div>`).join("") +
+          `<div class="row tot"><span>Total shown</span><span>${fmt(totals[i])}</span></div>` + (st.avg ? `<div class="row"><span>7-day average</span><span>${avgVals[i].toFixed(1)}</span></div>` : "") + `<div class="cta">Click for the transactions</div>`;
+      }
       tip.style.display = "block";
       const box = chart.getBoundingClientRect();
       let left = ev.clientX - box.left + 14;
       if (left + tip.offsetWidth > box.width) left = ev.clientX - box.left - tip.offsetWidth - 14;
       tip.style.left = Math.max(0, left) + "px";
-      tip.style.top = Math.max(0, ev.clientY - box.top - tip.offsetHeight / 2) + "px";
+      tip.style.top = Math.max(0, Math.min(box.height - tip.offsetHeight, ev.clientY - box.top - tip.offsetHeight / 2)) + "px";
     });
-    svg.addEventListener("mouseleave", () => { tip.style.display = "none"; if (hl) hl.setAttribute("fill", "transparent"); });
+    svg.addEventListener("mouseleave", () => {
+      tip.style.display = "none"; if (hl) hl.setAttribute("fill", "transparent");
+      svg.querySelector("#xh")?.setAttribute("opacity", 0); svg.querySelector("#xd")?.setAttribute("opacity", 0);
+    });
+    svg.addEventListener("click", ev => {
+      const t = ev.target.closest(".hit"); if (!t) return;
+      const r = rows[+t.dataset.i]; openDetail(r.date, r.end, r.label, r.key);
+    });
   }
 
-  document.querySelectorAll("[data-range]").forEach(b => b.onclick = () => {
-    range = b.dataset.range; document.querySelectorAll("[data-range]").forEach(x => x.setAttribute("aria-pressed", x === b)); draw();
+  // ---- transactions for a day / week (txs.json is loaded on first use) ----
+  let txData = null;
+  const det = document.getElementById("detail");
+  const groupOf = a => a === "claim created" ? "claims" : (a === "bounty created" || a === "bounty canceled") ? "bounties" : a === "claim accepted" ? "accepted"
+    : (a === "voted" || a === "voting resolved" || /submitted for vote$/.test(a)) ? "voting" : (/^[+-][\d.]+ eth$/.test(a) || a === "funds claimed") ? "funding" : "bounties";
+  const nice = a => /^\d+ submitted for vote$/.test(a) ? "claim sent to vote" : /^\+/.test(a) ? "added " + a.slice(1) : /^-/.test(a) ? "withdrew " + a.slice(1) : a;
+  async function openDetail(from, to, label, key) {
+    st.sel = key;
+    det.style.display = "block";
+    det.innerHTML = `<h3><span>${esc(label)}</span></h3><div class="notes">Loading transactions…</div>`;
+    draw(rowsDrawn);
+    if (!txData) {
+      try { txData = await (await fetch("data/txs.json?v=" + Date.now())).json(); }
+      catch (e) { det.innerHTML = `<div class="notes">Could not load data/txs.json.</div>`; return; }
+    }
+    const lo = Date.parse(from + "T00:00:00Z") / 1000, hi = Date.parse(to + "T00:00:00Z") / 1000 + 86400;
+    const chainOf = Object.fromEntries(CHAINS.map(c => [c.key, c]));
+    const list = txData.txs.filter(t => t[0] >= lo && t[0] < hi)
+      .filter(t => st.view === "action" ? !st.off.has(groupOf(t[2])) : !st.off.has(t[1]))
+      .sort((a, b) => b[0] - a[0]);
+    det.innerHTML = `<h3><span>${esc(label)}: ${fmt(list.length)} transaction${list.length === 1 ? "" : "s"}</span><button id="close">Close</button></h3>
+      <div class="txlist">${list.map(t => {
+        const c = chainOf[t[1]], title = txData.bounties[t[1] + ":" + t[3]] || ("bounty " + t[3]);
+        const when = from === to ? new Date(t[0] * 1000).toISOString().slice(11, 16) : new Date(t[0] * 1000).toISOString().slice(5, 10);
+        return `<div class="tx"><span class="t">${when}</span>
+          <span class="c"><i class="sw" style="background:${c.col}"></i>${c.label}</span><span class="a">${esc(nice(t[2]))}</span>
+          <a class="b" href="https://poidh.xyz/${c.slug}/bounty/${Number(t[3])}" target="_blank" rel="noopener" title="${esc(title)}">${esc(title)}</a>
+          <a class="h" href="${c.ex}${esc(t[4])}" target="_blank" rel="noopener">${esc(t[4].slice(0, 6))}…${esc(t[4].slice(-4))}</a></div>`;
+      }).join("") || '<div class="notes" style="padding:8px 0">No transactions for the chains or actions you have switched on.</div>'}</div>`;
+    det.querySelector("#close").onclick = () => { st.sel = null; det.style.display = "none"; draw(rowsDrawn); };
+  }
+
+  // ---- table ----
+  document.getElementById("table").innerHTML = "<thead><tr><th>Date (UTC)</th>" + CHAINS.slice().reverse().map(c => `<th>${c.label}</th>`).join("") +
+    ACTIONS.map(a => `<th>${a.label}</th>`).join("") + "<th>Total</th></tr></thead><tbody>" +
+    days.slice().reverse().map(d => `<tr data-d="${d.date}"><td>${d.date}</td>${CHAINS.slice().reverse().map(c => `<td>${fmt(d[c.key])}</td>`).join("")}${ACTIONS.map(a => `<td>${fmt(d.by[a.key])}</td>`).join("")}<td><b>${fmt(d.total)}</b></td></tr>`).join("") + "</tbody>";
+  document.querySelector("#table tbody").addEventListener("click", ev => {
+    const tr = ev.target.closest("tr"); if (!tr) return;
+    const d = tr.dataset.d;
+    if (st.group !== "day") { st.group = "day"; render(); }
+    if (!rowsDrawn.some(r => r.key === d)) { st.range = "all"; render(); }
+    openDetail(d, d, pretty(d), d); chart.scrollIntoView({ behavior: "smooth", block: "start" });
   });
-  document.querySelectorAll("[data-group]").forEach(b => b.onclick = () => {
-    group = b.dataset.group; document.querySelectorAll("[data-group]").forEach(x => x.setAttribute("aria-pressed", x === b)); draw();
+
+  // ---- controls ----
+  function pressed(sel, attr, v) { document.querySelectorAll(sel).forEach(x => x.setAttribute("aria-pressed", x.dataset[attr] === v)); }
+  document.querySelectorAll("[data-range]").forEach(b => b.onclick = () => { st.range = b.dataset.range; render(); });
+  document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => { st.view = b.dataset.view; st.off.clear(); render(); });
+  document.querySelectorAll("[data-group]").forEach(b => b.onclick = () => { st.group = b.dataset.group; st.sel = null; det.style.display = "none"; render(); });
+  avgEl.onchange = () => { st.avg = avgEl.checked; render(); };
+  [fromEl, toEl].forEach(el => el.onchange = () => {
+    if (!fromEl.value || !toEl.value) return;
+    const a = fromEl.value, b = toEl.value;
+    st.range = "custom"; st.from = a < b ? a : b; st.to = a < b ? b : a; render();
   });
-  window.addEventListener("resize", () => { clearTimeout(window._rt); window._rt = setTimeout(draw, 120); });
-  draw();
+
+  function render() {
+    const rows = inRange();
+    fromEl.value = rows[0].date; toEl.value = rows[rows.length - 1].date;
+    pressed("[data-range]", "range", st.range); pressed("[data-view]", "view", st.view); pressed("[data-group]", "group", st.group);
+    avgEl.checked = st.avg; avgEl.disabled = st.view === "cum";
+    tiles(rows); legend(); draw(bucket(rows)); sync();
+  }
+  window.addEventListener("resize", () => { clearTimeout(window._rt); window._rt = setTimeout(() => draw(rowsDrawn), 120); });
+  render();
 })();
 </script>
 </body>
