@@ -1,0 +1,41 @@
+name: daily-data
+
+on:
+  schedule:
+    - cron: "20 0 * * *"   # every day 00:20 UTC
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore: ["data/**"]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild daily counts from the poidh indexer
+        run: python3 -I build.py
+      - name: Commit the refreshed data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/daily.json data/daily.csv
+          git diff --cached --quiet || git commit -m "data: refresh daily counts" && git push
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4
